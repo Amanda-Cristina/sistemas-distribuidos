@@ -1,6 +1,8 @@
 
 # Funcionamento do Sistema
 
+[Link protocolo](https://docs.google.com/spreadsheets/d/1Gjys73_gtiCY9MKNksQyY0NIzIDkiwHdtqvJzyfLHfs/edit#gid=0)
+
 ## Requisitos Não Funcionais
 
 ### Estado do usuário são:
