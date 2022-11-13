@@ -54,6 +54,29 @@ public class Client extends Thread{
     
     }
     
+        //Close Client//////////////////////////////////////////////////////////////
+    public void desconnect() throws IOException{
+           
+        this.echoSocket.close();                     
+        this.out.close(); 
+        this.in.close();
+        System.out.println("Connection closed "+ this.ip + ":" + this.port);
+        
+    
+    }
+    
+    
+    //Reconnect Client//////////////////////////////////////////////////////////////
+    public void reconnect() throws IOException{
+        this.echoSocket = new Socket(this.ip, this.port);
+        this.out = new PrintWriter(this.echoSocket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(
+                                        this.echoSocket.getInputStream()));
+
+        System.out.println ("New Communication Started " + this.ip +":" + this.port + " - " + this.echoSocket.getLocalPort());
+    
+    }
+    
     //Envio Mensagem////////////////////////////////////////////////////////////
     public void sendMessage(JSONObject msg_json) throws IOException, JSONException{
 
@@ -65,7 +88,8 @@ public class Client extends Thread{
     //Tratamento Mensagens e feedback///////////////////////////////////////////
     
     
-    public void treatLogout(JSONObject json_msg, ClientView clientView) throws JSONException{
+    public void treatLogout(JSONObject json_msg, ClientView clientView) throws JSONException, IOException{
+        
         clientView.setLoginpanelVisibility(true);
     }
     
@@ -73,7 +97,9 @@ public class Client extends Thread{
         clientView.setHomepanelVisibility(true);
     }
     
-    public void treatSignup(JSONObject json_msg, ClientView clientView) throws JSONException{
+    public void treatSignup(JSONObject json_msg, ClientView clientView) throws JSONException, IOException{
+        //desconnect();
+        //reconnect();
         clientView.setLoginpanelVisibility(true);
         
     }
@@ -111,6 +137,8 @@ public class Client extends Thread{
             } catch (JSONException ex) {
                 
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             }
         };
         return runnable;
@@ -124,16 +152,9 @@ public class Client extends Thread{
                 String msg = this.in.readLine();
                 
                 //Sem resposta ou socket fechado: fecha socket, mata loop 
-                if (msg == null ||  this.echoSocket.isClosed() || msg.equals("null")) {
-                    System.out.println("Connection closed");
-                    this.echoSocket.close();
-                    
-                    
-                    this.echoSocket = new Socket(this.ip, this.port);
-                    this.out = new PrintWriter(this.echoSocket.getOutputStream(), true);
-                    this.in = new BufferedReader(new InputStreamReader(
-                                       this.echoSocket.getInputStream()));
-                    System.out.println ("New Communication Started " + this.ip +":" + this.port);
+                if (msg == null ||  this.echoSocket.isClosed() || !this.echoSocket.isConnected() || msg.equals("null")) {
+                    this.desconnect();
+                    this.reconnect();
                     //break;
                 //Recebe Mensagens
                 }else{
@@ -154,7 +175,7 @@ public class Client extends Thread{
             if(e.getMessage().equals("Connection reset")){
                 System.out.println("Client desconected");
                 try {
-                    this.echoSocket.close();
+                    this.desconnect();
                 } catch (IOException ex) {
                     Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                 }

@@ -39,7 +39,16 @@ public class ServerThread extends Thread{
         this.view = server.getServerView();
     }
     
-    
+    public void desconnect() throws IOException{
+        System.out.println("Client desconected " + this.clientSocket.getInetAddress().getHostAddress() + ":" +
+                                        this.clientSocket.getPort());   
+        this.clientSocket.close();         
+        this.out.close(); 
+        this.in.close();
+        this.user.connected = false;  //duvida: não deveria tirar da lista
+        this.server.updateTable();
+        
+    }
     
     private JSONObject signup(JSONObject msg_json) throws JSONException, IOException{
         JSONObject reply = new JSONObject();
@@ -210,22 +219,45 @@ public class ServerThread extends Thread{
         return reply;    
     }
     
-    private JSONObject getReply(JSONObject msg_json) throws JSONException, IOException, Exception{
+    private void setReply(JSONObject msg_json) throws JSONException, IOException, Exception{
         String operation =  msg_json.get("operacao").toString();
         //String operation = msg_json.getString("operacao");
        
         JSONObject reply = new JSONObject();
         switch (operation) {
             
-            case "cadastrar" -> reply = signup(msg_json);
+            case "cadastrar" -> {
+                reply = signup(msg_json);
+                sendMessage(reply);
+                this.desconnect();
+            }
             
-            case "login" -> reply = login(msg_json);
+            case "login" -> {
+                reply = login(msg_json);
+                sendMessage(reply);
+            }
             
-            case "logout" -> reply = logout(msg_json);
+            case "logout" -> {
+                reply = logout(msg_json);
+                sendMessage(reply);
+                this.desconnect();
+            }
             
             default -> {}
         }
-        return reply;
+        
+    }
+        //Envio Mensagem////////////////////////////////////////////////////////////
+    public void sendMessage(JSONObject reply) throws IOException, JSONException{
+        if(reply != null){
+                        //sending reply to client
+                        this.out.println(reply);
+                        this.out.flush();
+                        System.out.println("Message sent to " + this.clientSocket.getInetAddress().getHostAddress() + ":" + 
+                                                this.clientSocket.getPort() + " = " + reply);
+                     
+                    }
+       
     }
     
     public void run(){
@@ -255,13 +287,9 @@ public class ServerThread extends Thread{
                 String msg = this.in.readLine();
                
                 //Sem resposta ou cliente fechado: desconecta (bool), fecha socket, atualiza tabela, mata loop 
-                if (msg == null || this.clientSocket.isClosed()|| msg.equals("null")) {
-                    System.out.println("Client desconected ");           
-                    this.user.connected = false;  //duvida: não deveria tirar da lista
-                    this.clientSocket.close();         
-                    this.out.close(); 
-                    this.in.close();
-                    this.server.updateTable();
+                if (msg == null || this.clientSocket.isClosed()|| msg.equals("null")|| !this.clientSocket.isConnected()) {           
+                    
+                    this.desconnect();
                     
                     
                     
@@ -272,16 +300,10 @@ public class ServerThread extends Thread{
                     
                     System.out.println("Message received from " + this.clientSocket.getInetAddress().getHostAddress() + ":" +
                                         this.clientSocket.getPort() + " = " + msg);
-                    //get the reply
-                    JSONObject reply = this.getReply(JSONMsg);
-                    if(reply != null){
-                        //sending reply to client
-                        this.out.println(reply);
-                        this.out.flush();
-                        System.out.println("Message sent to " + this.clientSocket.getInetAddress().getHostAddress() + ":" + 
-                                                this.clientSocket.getPort() + " = " + reply);
-                     
-                    }
+                    //set the reply
+                    this.setReply(JSONMsg);
+                    //JSONObject reply = this.getReply(JSONMsg);
+                    
                 }
             }
         } 
@@ -289,13 +311,12 @@ public class ServerThread extends Thread{
         { 
             //Desconecta cliente de forma forçada: desconecta client (bool), fechasocket clientes, mata thread 
             if(e.getMessage().equals("Connection reset")){
-                System.out.println("Client desconected " + this.clientSocket.getInetAddress().getHostAddress());
+                
                 //this.user.setLoggedUser(false);
                 //this.server.removeActiveUsers(this.user); //duvida: tira da lista?
-                this.user.connected = false; 
-                this.server.updateTable();
+                
                 try {
-                    this.clientSocket.close();
+                    this.desconnect();
                 } catch (IOException ex) {
                     Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                 }
