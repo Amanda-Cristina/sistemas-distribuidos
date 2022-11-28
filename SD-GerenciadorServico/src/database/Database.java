@@ -47,7 +47,7 @@ public class Database implements Serializable{
         Database bd_;
         ObjectInputStream inputobj = null;
         try{
-            inputobj = new ObjectInputStream(new BufferedInputStream(new FileInputStream(new File("database.dat"))));
+            inputobj = new ObjectInputStream(new BufferedInputStream(new FileInputStream(new File("banco.dat"))));
             bd_ = (Database) inputobj.readObject();
             inputobj.close();
             return bd_;
@@ -58,7 +58,7 @@ public class Database implements Serializable{
     
     public void saveState() throws IOException{
         ObjectOutputStream outputobj = null;
-        outputobj = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("database.dat")));
+        outputobj = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("banco.dat")));
         outputobj.writeObject(Database.bd);
         outputobj.close();
     }

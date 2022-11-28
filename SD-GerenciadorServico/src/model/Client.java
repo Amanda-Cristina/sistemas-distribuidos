@@ -150,7 +150,7 @@ public class Client extends Thread{
         try{
             while(true){
                 String msg = this.in.readLine();
-                
+                System.out.println(msg);
                 //Sem resposta ou socket fechado: fecha socket, mata loop 
                 if (msg == null ||  this.echoSocket.isClosed() || !this.echoSocket.isConnected() || msg.equals("null")) {
                     this.desconnect();
