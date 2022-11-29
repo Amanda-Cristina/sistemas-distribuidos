@@ -34,9 +34,12 @@ public class Client extends Thread{
     public String senha;
     public String ip;
     public int port;
+    public ArrayList<String> listUsers;
+    public User user;
     //public ArrayList<String> categorias;
     
     public Client(ClientView clientView){
+        
         this.clientView = clientView;
         
     }
@@ -94,6 +97,16 @@ public class Client extends Thread{
     }
     
     public synchronized void treatLogin(JSONObject json_msg, ClientView clientView) throws JSONException{
+        //User user = new User(nome, ra, categoria, descricao, senha);
+        JSONObject data_ = (JSONObject) json_msg.get("dados");
+        JSONObject user_ = (JSONObject)data_.get("usuario");
+        String ra = user_.get("ra").toString();
+        String nome = user_.get("nome").toString();
+        String senha = user_.get("senha").toString();
+        int categoria = Integer.parseInt(user_.get("categoria_id").toString());
+        String descricao = user_.get("descricao").toString();
+        this.user = new User(nome, ra, categoria, descricao, senha);
+        
         clientView.setHomepanelVisibility(true);
     }
     
@@ -104,6 +117,28 @@ public class Client extends Thread{
         
     }
     
+    public void treatUsersList(JSONObject json_msg, ClientView clientView) throws JSONException{
+        JSONObject data_ = (JSONObject) json_msg.get("dados");
+        ArrayList<JSONObject> usuarios_ = (ArrayList<JSONObject>)data_.get("usuarios");
+        this.listUsers = new ArrayList<>(); 
+        if(!usuarios_.isEmpty()){
+            for(JSONObject user_ : usuarios_){
+                if(!user_.get("ra").toString().equals(this.user.ra)){
+                    listUsers.add(user_.get("nome").toString());
+                }
+
+            }
+        }
+        else{
+            System.out.println("Lista vazia");
+        }
+        clientView.setListUsers();
+        
+    }
+    
+   public ArrayList<String> getLoggedUsers(){
+        return this.listUsers;
+    }
     
     
     //Thread Client Mensagens Recebidas/////////////////////////////////////////
@@ -123,6 +158,9 @@ public class Client extends Thread{
                     }
                     case 600 -> {
                         treatLogout(json_msg, clientView);
+                    }
+                    case 203 -> {
+                        treatUsersList(json_msg, clientView);
                     }
                     case 400,202,500,404,403 -> {
                         JOptionPane.showMessageDialog(null, json_msg.get("mensagem"), "Erro Cadastro",
@@ -150,7 +188,6 @@ public class Client extends Thread{
         try{
             while(true){
                 String msg = this.in.readLine();
-                System.out.println(msg);
                 //Sem resposta ou socket fechado: fecha socket, mata loop 
                 if (msg == null ||  this.echoSocket.isClosed() || !this.echoSocket.isConnected() || msg.equals("null")) {
                     this.desconnect();

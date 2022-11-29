@@ -10,10 +10,13 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
 import model.Categoria;
 import model.Client;
 import org.json.JSONException;
@@ -34,6 +37,7 @@ public class ClientView extends javax.swing.JFrame {
     public ClientView() {
         initComponents();
         this.setComboxCategory();
+        this.setListUsers();
         
     }
 
@@ -46,6 +50,7 @@ public class ClientView extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jMenuItem1 = new javax.swing.JMenuItem();
         serverconnection = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
@@ -82,7 +87,16 @@ public class ClientView extends javax.swing.JFrame {
         jPanel5 = new javax.swing.JPanel();
         homebtnlogout = new javax.swing.JButton();
         jLabel14 = new javax.swing.JLabel();
+        jLabel15 = new javax.swing.JLabel();
+        homebtncategory = new javax.swing.JButton();
+        homecategoria = new javax.swing.JComboBox<>();
+        jLabel16 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jList1 = new javax.swing.JList<>();
         jLabel10 = new javax.swing.JLabel();
+        homelabelnome = new javax.swing.JLabel();
+
+        jMenuItem1.setText("jMenuItem1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new java.awt.CardLayout());
@@ -143,7 +157,7 @@ public class ClientView extends javax.swing.JFrame {
             .addGroup(serverconnectionLayout.createSequentialGroup()
                 .addGap(131, 131, 131)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(144, Short.MAX_VALUE))
+                .addContainerGap(163, Short.MAX_VALUE))
             .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         serverconnectionLayout.setVerticalGroup(
@@ -224,7 +238,7 @@ public class ClientView extends javax.swing.JFrame {
         loginpanelLayout.setHorizontalGroup(
             loginpanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, loginpanelLayout.createSequentialGroup()
-                .addContainerGap(141, Short.MAX_VALUE)
+                .addContainerGap(160, Short.MAX_VALUE)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(134, 134, 134))
             .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -347,7 +361,7 @@ public class ClientView extends javax.swing.JFrame {
         signuppanel.setLayout(signuppanelLayout);
         signuppanelLayout.setHorizontalGroup(
             signuppanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, 610, Short.MAX_VALUE)
+            .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, 629, Short.MAX_VALUE)
             .addGroup(signuppanelLayout.createSequentialGroup()
                 .addGap(112, 112, 112)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -375,38 +389,98 @@ public class ClientView extends javax.swing.JFrame {
 
         jLabel14.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel14.setText("Já está saindo?");
+        jLabel14.setText("Quer escolher uma categoria?");
         jLabel14.setToolTipText("");
+
+        jLabel15.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel15.setText("Já está saindo?");
+        jLabel15.setToolTipText("");
+
+        homebtncategory.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        homebtncategory.setText("Search");
+        homebtncategory.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                homebtncategoryActionPerformed(evt);
+            }
+        });
+
+        homecategoria.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None", "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        jLabel16.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel16.setText("Com quem você vai falar?");
+        jLabel16.setToolTipText("");
+
+        jList1.setModel(new javax.swing.AbstractListModel<String>() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
+        jScrollPane1.setViewportView(jList1);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jLabel14, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 318, Short.MAX_VALUE)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap(112, Short.MAX_VALUE)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel5Layout.createSequentialGroup()
+                                .addComponent(homecategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(homebtncategory))
+                            .addComponent(jLabel16, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)))
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addGap(116, 116, 116)
                 .addComponent(homebtnlogout)
-                .addGap(109, 109, 109))
-            .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addGap(255, 255, 255)
-                .addComponent(jLabel14)
-                .addGap(27, 27, 27)
+                .addGap(30, 30, 30)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addComponent(jLabel14)
+                        .addGap(18, 18, 18)
+                        .addComponent(homecategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(homebtncategory, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(29, 29, 29)
+                .addComponent(jLabel16)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
+                .addComponent(jLabel15)
+                .addGap(18, 18, 18)
                 .addComponent(homebtnlogout, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(89, Short.MAX_VALUE))
+                .addGap(45, 45, 45))
         );
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
         jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel10.setText("Olá");
 
+        homelabelnome.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
+        homelabelnome.setText("teste");
+
         javax.swing.GroupLayout homepanelLayout = new javax.swing.GroupLayout(homepanel);
         homepanel.setLayout(homepanelLayout);
         homepanelLayout.setHorizontalGroup(
             homepanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, 610, Short.MAX_VALUE)
+            .addGroup(homepanelLayout.createSequentialGroup()
+                .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 226, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(homelabelnome, javax.swing.GroupLayout.PREFERRED_SIZE, 387, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, homepanelLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -416,7 +490,9 @@ public class ClientView extends javax.swing.JFrame {
             homepanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(homepanelLayout.createSequentialGroup()
                 .addGap(16, 16, 16)
-                .addComponent(jLabel10)
+                .addGroup(homepanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(homelabelnome, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
@@ -538,29 +614,60 @@ public class ClientView extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_signupbtnActionPerformed
 
+    private void signupcancelbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_signupcancelbtnActionPerformed
+        this.signuppanel.setVisible(false);
+        this.loginpanel.setVisible(true);
+        
+    }//GEN-LAST:event_signupcancelbtnActionPerformed
+
+    private void homebtncategoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homebtncategoryActionPerformed
+        JSONObject jsonobj = new JSONObject();
+        JSONObject data = new JSONObject();
+        //private Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
+        try {
+            if(
+                !this.signupcategoria.getSelectedItem().toString().equals("none")){
+                data.put("categoria_id", Categoria.valueOf(String.valueOf(this.signupcategoria.getSelectedItem())).ordinal());
+
+                jsonobj.put("parametros", data);
+                jsonobj.put("operacao", "obter_usuarios");
+                this.client.sendMessage(jsonobj);
+
+            }else{
+
+                if(this.signupcategoria.getSelectedItem().toString().equals("none")){
+                    JOptionPane.showMessageDialog(null, "Campo CATEGORIA vazio", "Erro Cadastro",
+                        JOptionPane.WARNING_MESSAGE);
+                }
+
+            }
+        } catch (JSONException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            Logger.getLogger(ClientView.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            //show error window
+            System.out.println("Erro cadastro");
+        }
+    }//GEN-LAST:event_homebtncategoryActionPerformed
+
     private void homebtnlogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homebtnlogoutActionPerformed
         JSONObject jsonobj = new JSONObject();
         JSONObject data = new JSONObject();
         try{
             data.put("ra",this.client.userName);
             data.put("senha",this.client.senha);
-            
+
             jsonobj.put("parametros", data);
             jsonobj.put("operacao", "logout");
             this.client.sendMessage(jsonobj);
-            
+
         }catch(JSONException | IOException e){
             e.printStackTrace();
         }catch(Exception e){
             System.out.println(e);
         }
     }//GEN-LAST:event_homebtnlogoutActionPerformed
-
-    private void signupcancelbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_signupcancelbtnActionPerformed
-        this.signuppanel.setVisible(false);
-        this.loginpanel.setVisible(true);
-        
-    }//GEN-LAST:event_signupcancelbtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -602,7 +709,10 @@ public class ClientView extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Descricao;
+    private javax.swing.JButton homebtncategory;
     private javax.swing.JButton homebtnlogout;
+    private javax.swing.JComboBox<String> homecategoria;
+    private javax.swing.JLabel homelabelnome;
     private javax.swing.JPanel homepanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
@@ -610,6 +720,8 @@ public class ClientView extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -617,10 +729,13 @@ public class ClientView extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
+    private javax.swing.JList<String> jList1;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton loginbtn;
     private javax.swing.JPanel loginpanel;
     private javax.swing.JTextField loginra;
@@ -652,6 +767,7 @@ public class ClientView extends javax.swing.JFrame {
     }
     
     public void setHomepanelVisibility(boolean state) {
+        this.homelabelnome.setText(this.client.user.nome);
         this.serverconnection.setVisible(false);
         this.loginpanel.setVisible(false);
         this.homepanel.setVisible(state);
@@ -668,7 +784,31 @@ public class ClientView extends javax.swing.JFrame {
         //JComboBox signupcategoria = new JComboBox(objects);
         DefaultComboBoxModel model = new DefaultComboBoxModel(objects);
         signupcategoria.setModel( model );
+        homecategoria.setModel( model );
         
     }
+    
+    public void setListUsers(){
+        jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        DefaultListModel model = new DefaultListModel<>();
+        try{
+            for (String u : this.client.listUsers){
+                model.addElement(u);
+            }
+        }
+        catch (NullPointerException e){
+            model.addElement("none");   
+            //System.out.print("NullPointerException caught");
+        }
+        
+            
+        jList1.setModel(model);
+        }
+        
+
+
+       
+        
+    
 
 }

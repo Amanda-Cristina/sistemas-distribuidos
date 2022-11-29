@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
@@ -31,7 +32,7 @@ public class ServerThread extends Thread{
     public Socket clientSocket;
     public PrintWriter out;
     public BufferedReader in;
-    private ActiveUser user;
+    public ActiveUser user;
     
     public ServerThread(Socket clientSocket, Server server){
         this.server = server;
@@ -39,14 +40,66 @@ public class ServerThread extends Thread{
         this.view = server.getServerView();
     }
     
-    public void desconnect() throws IOException{
-        System.out.println("Client desconected " + this.clientSocket.getInetAddress().getHostAddress() + ":" +
-                                        this.clientSocket.getPort());   
-        this.clientSocket.close();         
-        this.out.close(); 
-        this.in.close();
-        this.user.connected = false;  //duvida: não deveria tirar da lista
-        this.server.updateTable();
+    public void sendListUsers( ArrayList<ActiveUser> loggedUsers ) throws IOException, JSONException{
+        JSONObject reply = new JSONObject();
+        JSONObject dados = new JSONObject();
+        ArrayList<JSONObject> usuarios = new ArrayList<>();
+        
+        try{
+            for(ActiveUser user_ : loggedUsers){
+                
+                    JSONObject usuario = new JSONObject();
+                    usuario.put("nome", user_.user.nome);
+                    usuario.put("ra", user_.user.ra);
+                    usuario.put("descricao", user_.user.descricao);
+                    usuario.put("disponivel", user_.available ? 1 : 0);
+                    usuario.put("categoria_id", user_.user.categoria);
+
+                    usuarios.add(usuario);
+
+                
+            }
+            dados.put("usuarios", usuarios);
+            reply.put("status", 203);
+            reply.put("mensagem", "Lista de usuarios");
+            reply.put("dados", dados);
+        }
+         catch(Exception e){
+            reply.put("status", 500);
+            reply.put("mensagem", "Erro interno do servidor");
+            reply.put("dados", dados);
+        }
+        
+        sendMessage(reply);
+        
+        
+    }
+    
+    
+    
+    public void desconnect() {
+        try {
+            //System.out.println("Client desconected " + this.clientSocket.getInetAddress().getHostAddress() + ":" +
+                    //this.clientSocket.getPort());
+            this.clientSocket.close();
+            this.out.close();
+            this.in.close();
+            this.user.connected = false;
+            this.user.loggedUser = false;
+            this.user.available = false;
+            this.server.updateListAvailable();
+            this.server.updateTable();
+            this.server.removeThread(this);
+            this.interrupt();
+            System.out.println("desconect");
+
+        } catch (IOException ex) {
+            Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+            
+        }catch (JSONException ex) {
+            Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         
     }
     
@@ -130,7 +183,7 @@ public class ServerThread extends Thread{
         
         User user_ = User.baseUser(ra, senha);
         if(user_ != null){
-            if(!this.server.activeUserLoggedByIp(this.clientSocket.getInetAddress().getHostAddress())){
+            if(!this.server.activeUserLoggedByRa(ra)){
                 usuario.put("nome", user_.nome);
                 usuario.put("ra", user_.ra);
                 usuario.put("descricao", user_.descricao);
@@ -141,16 +194,18 @@ public class ServerThread extends Thread{
                 reply.put("status", 200);
                 reply.put("mensagem", "Usuário logado com sucesso!");
                 reply.put("dados", dados);
-
-
+                
                 this.user.user = user_;
                 this.user.loggedUser = true;
-                this.user.connection = this.clientSocket;
-                int user_index = this.server.getConnectedUsers().indexOf(this.user);
-                this.server.updateActiveUsers(user_index, this.user);
-
-                //this.server.addOnlineUser(this.user);
+                this.user.available = true;
                 this.server.updateTable();
+
+                //desnecessário:
+                //int user_index = this.server.getConnectedUsers().indexOf(this.user);
+                //this.server.updateActiveUsers(user_index, this.user);
+                //this.server.addOnlineUser(this.user);
+                
+                
             }
             else{
                 reply.put("status", 403);
@@ -183,14 +238,16 @@ public class ServerThread extends Thread{
             
             User user_ = User.baseUser(ra, senha);
             if(user_ != null){
-                if(this.server.activeUserLoggedByIp(this.clientSocket.getInetAddress().getHostAddress())){
-                    int user_index = this.server.getConnectedUsers().indexOf(this.user);
+                if(this.server.activeUserLoggedByRa(ra)){
                     this.user.loggedUser = false;
+                    this.server.updateTable();
+                    
+                    //desnecessário:  
                     //this.user.connection = null; //duvida: desconectar
                     //this.user.connected = false;
-                    this.server.updateActiveUsers(user_index, user);
+                    //int user_index = this.server.getConnectedUsers().indexOf(this.user);
+                    //this.server.updateActiveUsers(user_index, user);
                     //this.server.removeOnlineUser(user);
-                    this.server.updateTable();
             
                     reply.put("status", 600);
                     reply.put("mensagem", "Usuário desconectado com sucesso!");
@@ -230,18 +287,27 @@ public class ServerThread extends Thread{
                 reply = signup(msg_json);
                 sendMessage(reply);
                 this.desconnect();
+                System.out.println("Client desconected " + this.clientSocket.getInetAddress().getHostAddress() + ":" +
+                    this.clientSocket.getPort());
             }
             
             case "login" -> {
                 reply = login(msg_json);
                 sendMessage(reply);
+                this.server.updateListAvailable();
+
             }
             
             case "logout" -> {
                 reply = logout(msg_json);
                 sendMessage(reply);
                 this.desconnect();
+                System.out.println("Client desconected " + this.clientSocket.getInetAddress().getHostAddress() + ":" +
+                    this.clientSocket.getPort());
             }
+            
+            
+            
             
             default -> {}
         }
@@ -267,34 +333,44 @@ public class ServerThread extends Thread{
                 //in e out server
                 this.out = new PrintWriter(this.clientSocket.getOutputStream(), 
                                       true); 
-                this.in = new BufferedReader( 
-                 new InputStreamReader(this.clientSocket.getInputStream())); 
+                this.in = new BufferedReader(new InputStreamReader(this.clientSocket.getInputStream())); 
          
                 //controle usuários conectados
-                ActiveUser activeUser = this.server.getActiveUserByIp(this.clientSocket.getInetAddress().getHostAddress());
+                ActiveUser activeUser = this.server.getActiveUserByIpPort(this.clientSocket.getInetAddress().getHostAddress(), this.clientSocket.getPort());
                 if(activeUser == null){
                     activeUser = new ActiveUser(this.clientSocket.getInetAddress().getHostAddress(), 
-                                                   this.clientSocket.getPort(), false, false);
+                                                   this.clientSocket.getPort(), false, true, false);
                     this.server.addActiveUser(activeUser);
+                    System.out.println("lista atives");
                 }
-                activeUser.connected = true;
+                else{
+                        System.out.println("entrei de novo");
+                        activeUser.port = this.clientSocket.getPort();
+                        activeUser.connected = true;}
                 this.user = activeUser;
                 this.server.updateTable();
+                
+                //ActiveUser teste = this.server.getActiveUserByIp(this.clientSocket.getInetAddress().getHostAddress());
+                //System.out.println(teste.port + " " + teste.connected);
           
          
             //Troca mensagem 
             while(true){
+                if(this.clientSocket.isClosed()|| !this.clientSocket.isConnected()){
+                    break;
+                    
+                }
+                else{
                 String msg = this.in.readLine();
-               
                 //Sem resposta ou cliente fechado: desconecta (bool), fecha socket, atualiza tabela, mata loop 
-                if (msg == null || this.clientSocket.isClosed()|| msg.equals("null")|| !this.clientSocket.isConnected()) {           
-                    
+                if (msg == null ||  msg.equals("null")) {                        
                     this.desconnect();
-                    
-                    
-                    
+                    break;
+                      
+                
+                }
                 //Recebe Mensagens
-                }else{
+                else{
                     JSONParser parserMessage = new JSONParser();
                     JSONObject JSONMsg = (JSONObject) parserMessage.parse(msg);
                     
@@ -305,30 +381,20 @@ public class ServerThread extends Thread{
                     //JSONObject reply = this.getReply(JSONMsg);
                     
                 }
-            }
+            }}   
         } 
         catch (IOException e) 
         { 
             //Desconecta cliente de forma forçada: desconecta client (bool), fechasocket clientes, mata thread 
-            if(e.getMessage().equals("Connection reset")){
-                
-                //this.user.setLoggedUser(false);
-                //this.server.removeActiveUsers(this.user); //duvida: tira da lista?
-                
-                try {
-                    this.desconnect();
-                } catch (IOException ex) {
-                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                this.interrupt();
-            } 
-         
-         
+            this.desconnect();
+      
          
         } catch (JSONException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            this.desconnect();
+            //Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+            this.desconnect();
+            //Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
         } 
     }
     

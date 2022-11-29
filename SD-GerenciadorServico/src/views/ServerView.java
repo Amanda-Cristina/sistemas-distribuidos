@@ -12,6 +12,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import model.MyTableModel;
 import model.Server;
 
 
@@ -137,15 +141,13 @@ public class ServerView extends javax.swing.JFrame {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
-                "IP", "Port", "Name", "Logged", "Connected"
+                "IP", "Port", "Name", "Connected", "Logged", "Available"
             }
         ));
+        jTable1.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(jTable1);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -156,7 +158,7 @@ public class ServerView extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jSeparator4)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 446, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 442, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -237,18 +239,31 @@ public class ServerView extends javax.swing.JFrame {
         //</editor-fold>
         //</editor-fold>
         //</editor-fold>
-
+        
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ServerView().setVisible(true);
-            }
-        });
+        SwingUtilities.invokeLater(new Runnable(){public void run(){
+            new ServerView().setVisible(true);
+        }
+}); }
+        //java.awt.EventQueue.invokeLater(new Runnable() {;
+            //public void run() {new ServerView().setVisible(true);}});}
+    
+    
+    public DefaultTableModel getModelTable(){
+        return (DefaultTableModel) this.jTable1.getModel();
     }
     
     public JTable getTable(){
         return this.jTable1;
     }
+    
+    public void setTable(DefaultTableModel model,JTable table){
+        
+        SwingUtilities.invokeLater(new Runnable(){public void run(){
+            table.setModel(model);}
+    });
+        
+        }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel10;
@@ -266,3 +281,6 @@ public class ServerView extends javax.swing.JFrame {
     private javax.swing.JTextField serverstartupport;
     // End of variables declaration//GEN-END:variables
 }
+
+
+

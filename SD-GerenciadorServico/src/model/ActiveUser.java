@@ -17,13 +17,16 @@ public class ActiveUser {
     public User user;
     public boolean loggedUser;
     public boolean connected;
+    public boolean available;
     public Socket connection;
     
-    public ActiveUser(String ip, int porta, boolean loggedUser, boolean connected){
+    
+    public ActiveUser(String ip, int porta, boolean loggedUser, boolean connected, boolean available){
         this.ip = ip;
         this.port = porta;
         this.loggedUser = loggedUser;
         this.connected = connected;
+        this.available = available;
     }
     
     
