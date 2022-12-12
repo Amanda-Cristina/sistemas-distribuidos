@@ -33,6 +33,7 @@ public class ServerThread extends Thread{
     public PrintWriter out;
     public BufferedReader in;
     public ActiveUser user;
+    public ServerThread friend;
     
     public ServerThread(Socket clientSocket, Server server){
         this.server = server;
@@ -90,6 +91,10 @@ public class ServerThread extends Thread{
             this.server.updateListAvailable();
             this.server.updateTable();
             this.server.removeThread(this);
+            if(this.friend != null){
+                this.friend.friend = null;
+            }
+            
             this.interrupt();
             System.out.println("desconect");
 
@@ -98,6 +103,9 @@ public class ServerThread extends Thread{
             
         }catch (JSONException ex) {
             Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        catch(Exception e){
+            System.out.println("amigo sumiu");
         }
         
         
@@ -276,6 +284,125 @@ public class ServerThread extends Thread{
         return reply;    
     }
     
+    
+    
+    private boolean solicitar_chat(JSONObject msg_json) throws JSONException, Exception{
+   
+        JSONObject reply = new JSONObject();
+        JSONObject dados = new JSONObject();
+        JSONObject usuario = new JSONObject();
+        
+        
+        JSONObject data_ = (JSONObject) msg_json.get("parametros");
+        String ra_solicitante = data_.get("ra_solicitante").toString();
+        String ra_destino = data_.get("ra_destino").toString();
+
+        ServerThread friend_ = this.server.getThreadByRa(ra_destino);
+        if((this.user.available) & (friend_ != null) ){
+            usuario.put("nome", this.user.user.nome);
+            usuario.put("ra", this.user.user.ra);
+            usuario.put("descricao", this.user.user.descricao);
+            usuario.put("categoria_id", this.user.user.categoria);
+
+            dados.put("usuario_solicitante", usuario);                      
+            reply.put("status", 100);
+            reply.put("mensagem", "Solicitação de chat!");
+            reply.put("dados", dados);
+            
+            friend_.sendMessage(reply);
+            return true;
+        }else{
+            return false;
+        }   
+   
+    }
+    
+    private void aprovar_chat(JSONObject msg_json) throws JSONException, Exception{      
+      
+        JSONObject reply = new JSONObject();
+        JSONObject dados = new JSONObject();
+        
+        JSONObject data_ = (JSONObject) msg_json.get("parametros");
+        String ra_solicitante = data_.get("ra_solicitante").toString();
+        String ra_destino = data_.get("ra_destino").toString();
+        int resposta = Integer.parseInt(data_.get("resposta").toString());
+         
+        dados.put("ra_soliciante", ra_solicitante);
+        dados.put("ra_destino", ra_destino);
+        ServerThread friend_ = this.server.getThreadByRa(ra_solicitante);
+        if(resposta == 1){
+            this.friend = friend_;
+            this.friend.friend = this;
+            
+            this.user.available = false;
+            this.friend.user.available = false;
+            this.server.updateListAvailable();
+            this.server.updateTable();
+            
+            reply.put("status", 205);
+            reply.put("mensagem", "Solicitação de chat aprovada!");
+            
+        }
+        else{
+            reply.put("status", 401);
+            reply.put("mensagem", "Usuário destino negou a solicitação de chat!");
+        }
+        reply.put("dados", dados);
+        friend_.sendMessage(reply);
+        
+        
+    }
+    
+    private boolean message_chat(JSONObject msg_json) throws JSONException, Exception{
+        JSONObject reply = new JSONObject();
+        JSONObject dados = new JSONObject();
+        
+        JSONObject data_ = (JSONObject) msg_json.get("parametros");
+        String ra_remetente = data_.get("ra_remetente").toString();
+        String ra_destino = data_.get("ra_destino").toString();
+        String conteudo = msg_json.get("conteudo").toString();
+
+        
+        if(this.friend != null){
+            dados.put("ra_remetente", ra_remetente);
+            dados.put("ra_destino", ra_destino);
+            dados.put("conteudo", conteudo);
+            
+            reply.put("status", 208);
+            reply.put("mensagem", "Recebendo mensagem de chat!");
+            reply.put("dados", dados);
+            
+            this.friend.sendMessage(reply);
+            return true;
+        }else{
+            System.out.println("amigo vazio");
+            return false;
+        } 
+
+    }
+    
+        private void encerrar_chat(JSONObject msg_json) throws JSONException, Exception{      
+        
+        JSONObject reply = new JSONObject();
+        JSONObject dados = new JSONObject();
+        
+        
+        JSONObject data_ = (JSONObject) msg_json.get("parametros");
+        String ra_solicitante = data_.get("ra_solicitante").toString();
+        String ra_destino = data_.get("ra_destino").toString();
+         
+        dados.put("ra_soliciante", ra_solicitante);
+        dados.put("ra_destino", ra_destino);
+        
+        reply.put("status", 209);
+        reply.put("mensagem", "Encerrando chat!");
+        reply.put("dados", dados);
+        
+        this.friend.sendMessage(reply);
+        
+           
+    }
+    
     private void setReply(JSONObject msg_json) throws JSONException, IOException, Exception{
         String operation =  msg_json.get("operacao").toString();
         //String operation = msg_json.getString("operacao");
@@ -306,8 +433,85 @@ public class ServerThread extends Thread{
                     this.clientSocket.getPort());
             }
             
+            case "solicitar_chat" -> {
+                reply = new JSONObject();
+                JSONObject dados = new JSONObject();
+                
+
+                
+                try{
+                if(!solicitar_chat(msg_json)){
+                    
+                    JSONObject data_ = (JSONObject) msg_json.get("parametros");
+                    String ra_solicitante = data_.get("ra_solicitante").toString();
+                    String ra_destino = data_.get("ra_destino").toString();
+                    dados.put("ra_soliciante", ra_solicitante);
+                    dados.put("ra_destino", ra_destino);
+                    
+                    reply.put("status", 409);
+                    reply.put("mensagem", "Usuários indisponíveis para o chat!");
+                    reply.put("dados", dados);
+                    sendMessage(reply);
+                    
+                    
+                }}catch(Exception e){
+                    reply.put("status", 500);
+                    reply.put("mensagem", "Erro interno do servidor!");
+                    reply.put("dados", dados);
+                    sendMessage(reply);
+                }
+                
+            }           
+                        
             
-            
+            case "aprovar_chat" -> {
+                reply = new JSONObject();
+                JSONObject dados = new JSONObject();
+                try{
+                    aprovar_chat(msg_json);
+                }catch(Exception e){
+                    reply.put("status", 500);
+                    reply.put("mensagem", "Erro interno do servidor!");
+                    reply.put("dados", dados);
+                    sendMessage(reply);
+                }
+                
+                
+            }
+            case "menssagem" -> {
+                if(!message_chat(msg_json)){
+                reply = new JSONObject();
+                JSONObject dados = new JSONObject();
+                
+                JSONObject data_ = (JSONObject) msg_json.get("parametros");
+                String ra_remetente = data_.get("ra_remetente").toString();
+                String ra_destino = data_.get("ra_destino").toString();
+                dados.put("ra_remetente", ra_remetente);
+                dados.put("ra_destino", ra_destino);
+                    
+                reply.put("status", 409);
+                reply.put("mensagem", "Usuários indisponíveis para o chat!");
+                reply.put("dados", dados);
+                sendMessage(reply);
+            }                 
+            }
+            case "encerrar_chat" -> {
+
+                try{
+                                    
+                encerrar_chat(msg_json);
+                this.friend.user.available = true;
+                this.friend.friend = null;
+                }catch(Exception e){
+                    System.out.println("fechou chat");
+                }
+                this.user.available = true;
+                this.friend = null;
+                this.server.updateListAvailable();
+                this.server.updateTable();
+                
+                
+            }            
             
             default -> {}
         }
@@ -341,10 +545,8 @@ public class ServerThread extends Thread{
                     activeUser = new ActiveUser(this.clientSocket.getInetAddress().getHostAddress(), 
                                                    this.clientSocket.getPort(), false, true, false);
                     this.server.addActiveUser(activeUser);
-                    System.out.println("lista atives");
                 }
                 else{
-                        System.out.println("entrei de novo");
                         activeUser.port = this.clientSocket.getPort();
                         activeUser.connected = true;}
                 this.user = activeUser;

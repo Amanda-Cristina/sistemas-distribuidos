@@ -39,6 +39,21 @@ public class User implements Serializable{
         
     }
     
+    public User(//String id,
+                String nome,
+                String ra,
+                int categoria,
+                String descricao
+                
+               ){
+        //this.id = id;
+        this.nome = nome;
+        this.ra = ra;
+        this.categoria = categoria;
+        this.descricao = descricao;
+        
+        
+    }
     public static User getUserByRa(String ra) throws IOException{
         UserDAO userDAO = new UserDAO();
         List<User> users = userDAO.selectAll();

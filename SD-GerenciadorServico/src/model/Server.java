@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
 import org.json.JSONException;
+import org.json.simple.JSONObject;
 import views.ServerView;
 
 
@@ -135,7 +136,24 @@ public class Server extends Thread {
         return loggedUsers;
     }
     
+    private void sendMessageFriend(ServerThread friend) throws JSONException, Exception{
+        JSONObject reply = new JSONObject();
+        JSONObject dados = new JSONObject();
+
+        
+    }
     
+    
+    public ServerThread getThreadByRa(String ra){
+        for(ServerThread thread_ : this.threads){
+            if(thread_.user.user.ra.equals(ra)){
+                if(thread_.user.available){
+                    return thread_;
+                }
+            }
+        } 
+        return null;
+    }
     
     public void updateListAvailable() throws IOException, JSONException{
         ArrayList<ActiveUser> loggeddUsers = getLoggedUsers();
@@ -192,20 +210,19 @@ public class Server extends Thread {
     }
      
     public void updateTable()throws ArrayIndexOutOfBoundsException{
-            this.table = (DefaultTableModel) this.view.getModelTable();
+        this.table = (DefaultTableModel) this.view.getModelTable();
 
-            this.table.setRowCount(0);
-            int i = 0;            
-            
-            for(ActiveUser user_ : this.getConnectedUsers()){
+        this.table.setRowCount(0);
+        int i = 0;            
 
-                if(user_.loggedUser){
-                    System.out.println(user_.user.nome);
-                    this.table.insertRow(i++,new Object[]{user_.ip,user_.port,user_.user.nome, user_.connected,user_.loggedUser,user_.available});
-               }else{
-                    System.out.println(user_.port);
-                    this.table.insertRow(i++,new Object[]{user_.ip,user_.port,"--", user_.connected,user_.loggedUser,user_.available});}
-            }
-            this.view.setTable(this.table,this.view.getTable());
+        for(ActiveUser user_ : this.getConnectedUsers()){
+
+            if(user_.loggedUser){
+                this.table.insertRow(i++,new Object[]{user_.ip,user_.port,user_.user.nome, user_.connected,user_.loggedUser,user_.available});
+           }else{
+                this.table.insertRow(i++,new Object[]{user_.ip,user_.port,"--", user_.connected,user_.loggedUser,user_.available});}
         }
+        this.view.setTable(this.table,this.view.getTable());
+
+    }
 }

@@ -34,8 +34,9 @@ public class Client extends Thread{
     public String senha;
     public String ip;
     public int port;
-    public ArrayList<String> listUsers;
+    public ArrayList<User> friends;
     public User user;
+    public User friend;
     //public ArrayList<String> categorias;
     
     public Client(ClientView clientView){
@@ -57,7 +58,7 @@ public class Client extends Thread{
     
     }
     
-        //Close Client//////////////////////////////////////////////////////////////
+    //Close Client//////////////////////////////////////////////////////////////
     public void desconnect() throws IOException{
            
         this.echoSocket.close();                     
@@ -120,26 +121,89 @@ public class Client extends Thread{
     public void treatUsersList(JSONObject json_msg, ClientView clientView) throws JSONException{
         JSONObject data_ = (JSONObject) json_msg.get("dados");
         ArrayList<JSONObject> usuarios_ = (ArrayList<JSONObject>)data_.get("usuarios");
-        this.listUsers = new ArrayList<>(); 
+        this.friends = new ArrayList<>();
         if(!usuarios_.isEmpty()){
             for(JSONObject user_ : usuarios_){
                 if(!user_.get("ra").toString().equals(this.user.ra)){
-                    listUsers.add(user_.get("nome").toString());
+                    String ra = user_.get("ra").toString();
+                    String nome = user_.get("nome").toString();
+                    int categoria = Integer.parseInt(user_.get("categoria_id").toString());
+                    String descricao = user_.get("descricao").toString();
+                    friends.add(new User(nome, ra, categoria, descricao));
                 }
-
             }
         }
         else{
             System.out.println("Lista vazia");
         }
-        clientView.setListUsers();
+        clientView.setTableUsers();
         
     }
     
-   public ArrayList<String> getLoggedUsers(){
-        return this.listUsers;
+    public synchronized int treatApproveChat(JSONObject json_msg, ClientView clientView) throws JSONException{
+        JSONObject data_ = (JSONObject) json_msg.get("dados");
+        JSONObject user_ = (JSONObject)data_.get("usuario_solicitante");
+        String ra = user_.get("ra").toString();
+        String nome = user_.get("nome").toString();
+        int categoria = Integer.parseInt(user_.get("categoria_id").toString());
+        String descricao = user_.get("descricao").toString();
+        int resposta = 0;
+        
+        
+        int reply = JOptionPane.showConfirmDialog(null, nome + " fez uma solicitação de chat", "Quer começar um chat?", JOptionPane.YES_NO_OPTION);
+        if (reply == JOptionPane.YES_OPTION) {
+            resposta = 1;
+            this.friend = getFriendsByRa(ra);
+            
+        } else {
+            resposta = 0;
+        }
+        
+        JSONObject jsonobj = new JSONObject();
+        JSONObject data = new JSONObject();
+        try{
+            data.put("ra_solicitante",ra);
+            data.put("ra_destino",this.user.ra);
+            data.put("resposta",resposta);
+            
+            jsonobj.put("parametros", data);
+            jsonobj.put("operacao", "aprovar_chat");
+            this.sendMessage(jsonobj);
+            return resposta;
+
+        }catch(JSONException | IOException e ){
+            e.printStackTrace();
+            return resposta;
+        }
+
+        
     }
     
+    public synchronized void treatRequestChat(JSONObject json_msg, ClientView clientView) throws JSONException{
+        JSONObject data_ = (JSONObject) json_msg.get("dados");
+        String ra = data_.get("ra_destino").toString();
+        this.friend = getFriendsByRa(ra);
+
+        clientView.setChatpanelVisibility(true);
+
+        
+    }
+    
+    public synchronized void treatCloseChat(JSONObject json_msg, ClientView clientView) throws JSONException{
+        this.friend = null;
+        clientView.setChatpanelVisibility(false);
+
+        
+    }
+   
+    public synchronized void treatMessageChat(JSONObject json_msg, ClientView clientView) throws JSONException{
+        JSONObject data_ = (JSONObject) json_msg.get("dados");
+        String conteudo = data_.get("conteudo").toString();
+
+        clientView.setReadChat(conteudo);
+
+        
+    }
     
     //Thread Client Mensagens Recebidas/////////////////////////////////////////
     private synchronized Runnable createRunnable(final JSONObject json_msg, final ClientView clientView){
@@ -162,8 +226,22 @@ public class Client extends Thread{
                     case 203 -> {
                         treatUsersList(json_msg, clientView);
                     }
-                    case 400,202,500,404,403 -> {
-                        JOptionPane.showMessageDialog(null, json_msg.get("mensagem"), "Erro Cadastro",
+                    case 100 -> {
+                        if(treatApproveChat(json_msg, clientView)== 1){
+                        clientView.setChatpanelVisibility(true);}
+                        
+                    }
+                    case 205 -> {
+                        treatRequestChat(json_msg, clientView);
+                    }
+                    case 208 -> {
+                        treatMessageChat(json_msg, clientView);
+                    }
+                    case 209 -> {
+                        treatCloseChat(json_msg, clientView);
+                    }
+                    case 400,202,500,404,403,401,409 -> {
+                        JOptionPane.showMessageDialog(null, json_msg.get("mensagem"), "Erro",
                     JOptionPane.WARNING_MESSAGE);
                     }
                                        
@@ -221,6 +299,15 @@ public class Client extends Thread{
         } catch (ParseException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public User getFriendsByRa(String ra){
+        for(User friend_ : this.friends){
+            if(friend_.ra.equals(ra)){
+                    return friend_;
+                }
+        }
+        return null;
     }
 
    
